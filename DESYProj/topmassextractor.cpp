@@ -28,7 +28,7 @@ int topmassextractor()
 		TFile* dataF = TFile::Open("data/DiffXS_Hyp"+vars_dat[i]+"_source.root");
 		TH1D* hist_dat = (TH1D*) dataF->Get("mc");
 		double total = 0;
-		cout<<"*****Data Results*****\n";
+		//		cout<<"*****Data Results*****\n";
 		myfile<<"*****Data Results*****\n";
 		for(int b = 0; b < hist_dat->GetNbinsX(); b++)
       			{
