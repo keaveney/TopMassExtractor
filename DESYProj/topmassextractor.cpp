@@ -8,14 +8,18 @@
 
 #include <TFile.h>
 #include <TH1F.h>
+#include <TGraphAsymmErrors.h>
 #include <TMath.h>
+#include <TCanvas.h>
+
 #include <iostream>
 #include <fstream>
 
 using namespace std;
 
-int topmassextractor()
-{	 
+int main()
+{
+    
   	// list of variables
   	TString vars_dat[2] = {"TTBarMass", "ToppT"};
 	TString names[6] = {"mt168", "mt170", "mt172", "mt1733", "mt174", "mt176"};
@@ -27,49 +31,92 @@ int topmassextractor()
 		//extract data
 		TFile* dataF = TFile::Open("data/DiffXS_Hyp"+vars_dat[i]+"_source.root");
 		TH1D* hist_dat = (TH1D*) dataF->Get("mc");
+        
+        TCanvas * c = new TCanvas();
+        //hist_dat->DrawNormalized();
+        
+        TGraphAsymmErrors* gr_dat = (TGraphAsymmErrors*) dataF->Get("data");
+        
 		double total = 0;
+        double data_bin_x, data_bin_y, data_bin_error;
 		//		cout<<"*****Data Results*****\n";
+        
+        cout <<"   "<< endl;
+        cout <<"   "<< endl;
+
+        
 		myfile<<"*****Data Results*****\n";
 		for(int b = 0; b < hist_dat->GetNbinsX(); b++)
       			{
+                    
        			 double binwidth = hist_dat->GetBinLowEdge(b + 2) - hist_dat->GetBinLowEdge(b + 1);
         		// x-section should be multiplied by the number of iterations
        			 double xsec = hist_dat->GetBinContent(b + 1);
         		// x-section already divided by bin width: needs to be multiplied to sum up to the total x-section
-        		total += hist_dat->GetBinContent(b + 1)* binwidth;
-			cout<<setiosflags(ios::fixed)<<hist_dat->GetBinLowEdge(b+1)<<"<"<<vars_dat[i]<<"<"<<hist_dat->GetBinLowEdge(b+2)<<" xsec = "<<setiosflags(ios::scientific)<<xsec<<endl;
+                 gr_dat->GetPoint(b, data_bin_x,data_bin_y );
+        		 total += data_bin_y * binwidth;
+                    
+			//cout<<setiosflags(ios::fixed)<<hist_dat->GetBinLowEdge(b+1)<<"<"<<vars_dat[i]<<"<"<<hist_dat->GetBinLowEdge(b+2)<<" xsec = "<<setiosflags(ios::scientific)<<xsec<<endl;
+                    
+                    cout << "raw bin  " << data_bin_y << "  bin width  "<<  binwidth << " total  "<< total<< endl;
 			myfile<<setiosflags(ios::fixed)<<hist_dat->GetBinLowEdge(b+1)<<"<"<<vars_dat[i]<<"<"<<hist_dat->GetBinLowEdge(b+2)<<" xsec = "<<setiosflags(ios::scientific)<<xsec<<endl;
 			}
 			total+=hist_dat->GetBinContent(0);
 			total+=hist_dat->GetBinContent(hist_dat->GetNbinsX()+1);
 		//extract prediction
 		for (int n = 0;n<6;n++)
-		{TFile* f500k = TFile::Open("MS_FromSasha_Iter1/MS-" + names[n] + "-500k/grid-TTbar_MS_" + vars[i] + ".root");
+		{
+            cout <<"   "<< endl;
+            cout <<"   "<< endl;
+
+            TFile* f500k = TFile::Open("MS_FromSasha_Iter1/MS-" + names[n] + "-500k/grid-TTbar_MS_" + vars[i] + ".root");
       		TDirectoryFile* dir500k = (TDirectoryFile*) f500k->Get("grid");
       		TH1D* h500k = (TH1D*) dir500k->Get("reference");
+       
      		printf("%s\n", std::string(50, '*').c_str());
       		printf("*** NLO prediction mt = %.1f ***\n", mt[n]);
-		myfile<<string(50, '*').c_str()<<endl<<"*** NLO prediction mt = "<<mt[n]<<endl;
+            myfile<<string(50, '*').c_str()<<endl<<"*** NLO prediction mt = "<<mt[n]<<endl;
       		double total_pred = 0.0;
 			for(int b = 0; b < h500k->GetNbinsX(); b++){
 			double binwidth = h500k->GetBinLowEdge(b + 2) - h500k->GetBinLowEdge(b + 1);
 			// x-section should be multiplied by the number of iterations
         		double xsec_pred = h500k->GetBinContent(b + 1) * 5e5;
         		// x-section already divided by bin width: needs to be multiplied to sum up to the total x-section
-        		total_pred += h500k->GetBinContent(b + 1) * 5e5 * binwidth;
+        		//total_pred += h500k->GetBinContent(b + 1) * 5e5 * binwidth;
+                total_pred += xsec_pred;
+                
 			printf("%.1f < %s < %.1f  xsec = %.3e\n", h500k->GetBinLowEdge(b + 1), vars_dat[i].Data(), h500k->GetBinLowEdge(b + 2), xsec_pred);
 			myfile<<h500k->GetBinLowEdge(b + 1)<<"<"<<vars_dat[i].Data()<<"<"<<h500k->GetBinLowEdge(b + 2)<<", x_sec_pred = "<<xsec_pred<<endl;
-			}
+            cout <<"total pred running = "<<   total_pred << endl;
+            }
+            
+            cout <<"total pred before = "<<   total_pred << endl;
       			// add over/underflow bins to the total x-section: these were not divided by bin width
       		total_pred += h500k->GetBinContent(0) * 5e5;
       		total_pred += h500k->GetBinContent(h500k->GetNbinsX() + 1) * 5e5;
+            
+            cout <<"total pred after = "<<   total_pred << endl;
+
+            
+            cout <<" underflow = "<< h500k->GetBinContent(0) * 5e5 << "  overflow "<< h500k->GetBinContent(h500k->GetNbinsX() + 1) * 5e5  << endl;
+            
+            double sf = total/h500k->Integral();
+            
+            h500k->Scale(sf);
+            h500k->Draw();
 
 		printf("*** Total x-section_pred = %.3e ***\n", total_pred);
 	      	printf("*** Integrated x-section_pred (%.1f < %s < %.1f) = %.3e ***\n", h500k->GetBinLowEdge(1), vars_dat[i].Data(), h500k->GetBinLowEdge(h500k->GetNbinsX() + 1), h500k->Integral(1, h500k->GetNbinsX(), "width") * 5e5);
 		myfile<<"*** Total x-section_pred = "<<total_pred<<endl<<"Integrated x-sec_pred = "<<h500k->Integral(1, h500k->GetNbinsX(), "width") * 5e5<<endl;
 		f500k->Close();
 		}
-		cout<<"total x sec = "<<setiosflags(ios::scientific)<<total<<endl;
+
+        
+   
+        
+        c->SaveAs("preds.pdf");
+        
+		cout<<"total x sec (data) = "<<setiosflags(ios::scientific)<<total<<endl;
 		myfile<<"****Total x-sec from data = " <<setiosflags(ios::scientific)<<total<<endl<<"***************************************************"<<endl;
 		dataF->Close();
 	}
