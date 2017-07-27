@@ -1,10 +1,3 @@
-/// This is where you write some code to
-///   1. Access histogram of *data measurement* (ROOT files in data/ directory) of ttbar differential cross section as a function of a) Pt top, b) Mtt
-///   2. Access histograms of predctions for these differntial cross sections for different values of Mt 
-///   3. Loop over the predictions and calculate the chi^2 between data and each prediciton
-///   4. Make a final plot of chi^2 vs. Mt.
-///
-/// You should study the code in readhisto.cpp to see how to access histograms from ROOT files.
 
 #include <TFile.h>
 #include <TH1F.h>
@@ -13,7 +6,7 @@
 
 double calcChi2(vector <double> data, vector <double> pred);
 
-int topmassextractor()
+int topmasschi2()
 {
   // list of mt variations
   TString names[6] = {"mt168", "mt170", "mt172", "mt1733", "mt174", "mt176"};
@@ -171,3 +164,5 @@ double calcChi2(vector <double> data, vector <double> pred)
      chi2+= pow((data.at(i)-pred.at(i)/1000),2)/data.at(i);}
   return chi2;
 }
+
+	
