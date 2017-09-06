@@ -1,0 +1,57 @@
+After minimisation     129.28    42     3.078
+
+  Partial chi2s 
+Dataset    1     12.57( +2.41)     7  CMS 13TeV ttbar [M(ttbar)] cross section mt=168 
+Dataset    2      5.09( +1.82)     7  CMS 13TeV ttbar [M(ttbar)] cross section mt=170 
+Dataset    3      4.01( +1.18)     7  CMS 13TeV ttbar [M(ttbar)] cross section mt=172 
+Dataset    4      9.44( +0.75)     7  CMS 13TeV ttbar [M(ttbar)] cross section mt=1733
+Dataset    5     16.74( +0.49)     7  CMS 13TeV ttbar [M(ttbar)] cross section mt=174 
+Dataset    6     59.81( -0.19)     7  CMS 13TeV ttbar [M(ttbar)] cross section mt=176 
+
+ Correlated Chi2    15.145964401868389     
+ Log penalty Chi2    6.4625806698844732     
+ Systematic shifts           42
+  
+                                Name          Shift   +/-    Error          Type
+    1  PDF_nuisance_param_01                  1.8593   +/-   0.6793        :N:M:T
+    2  PDF_nuisance_param_02                  3.3897   +/-   0.7349        :N:M:T
+    3  PDF_nuisance_param_03                  0.4330   +/-   0.9780        :N:M:T
+    4  PDF_nuisance_param_04                 -0.1047   +/-   0.9967        :N:M:T
+    5  PDF_nuisance_param_05                  0.0072   +/-   0.9982        :N:M:T
+    6  PDF_nuisance_param_06                  0.0147   +/-   1.0000        :N:M:T
+    7  PDF_nuisance_param_07                  0.0100   +/-   0.9997        :N:M:T
+    8  PDF_nuisance_param_08                  0.0140   +/-   1.0000        :N:M:T
+    9  PDF_nuisance_param_09                 -0.0061   +/-   1.0000        :N:M:T
+   10  PDF_nuisance_param_10                  0.0039   +/-   1.0000        :N:M:T
+   11  PDF_nuisance_param_11                 -0.0037   +/-   1.0000        :N:M:T
+   12  PDF_nuisance_param_12                 -0.0005   +/-   1.0000        :N:M:T
+   13  PDF_nuisance_param_13                 -0.0036   +/-   1.0000        :N:M:T
+   14  PDF_nuisance_param_14                  0.0012   +/-   1.0000        :N:M:T
+   15  PDF_nuisance_param_15                  0.0000   +/-   1.0000        :N:M:T
+   16  PDF_nuisance_param_16                  0.0035   +/-   1.0000        :N:M:T
+   17  PDF_nuisance_param_17                 -0.0036   +/-   1.0000        :N:M:T
+   18  PDF_nuisance_param_18                  0.0005   +/-   1.0000        :N:M:T
+   19  PDF_nuisance_param_19                  0.0027   +/-   1.0000        :N:M:T
+   20  PDF_nuisance_param_20                 -0.0016   +/-   1.0000        :N:M:T
+   21  PDF_nuisance_param_21                 -0.0008   +/-   1.0000        :N:M:T
+   22  PDF_nuisance_param_22                  0.0006   +/-   1.0000        :N:M:T
+   23  PDF_nuisance_param_23                  0.0008   +/-   1.0000        :N:M:T
+   24  PDF_nuisance_param_24                  0.0011   +/-   1.0000        :N:M:T
+   25  PDF_nuisance_param_25                 -0.0004   +/-   1.0000        :N:M:T
+   26  PDF_nuisance_param_26                 -0.0002   +/-   1.0000        :N:M:T
+   27  PDF_nuisance_param_27                 -0.0002   +/-   1.0000        :N:M:T
+   28  PDF_nuisance_param_28                  0.0001   +/-   1.0000        :N:M:T
+   29  PDF_nuisance_param_29                 -0.0002   +/-   1.0000        :N:M:T
+   30  PDF_nuisance_param_30                 -0.0002   +/-   1.0000        :N:M:T
+   31  PDF_nuisance_param_31                  0.0000   +/-   1.0000        :N:M:T
+   32  PDF_nuisance_param_32                  0.0000   +/-   1.0000        :N:M:T
+   33  PDF_nuisance_param_33                 -0.0000   +/-   1.0000        :N:M:T
+   34  PDF_nuisance_param_34                  0.0000   +/-   1.0000        :N:M:T
+   35  PDF_nuisance_param_35                  0.0000   +/-   1.0000        :N:M:T
+   36  PDF_nuisance_param_36                  0.0000   +/-   1.0000        :N:M:T
+   37  PDF_nuisance_param_37                 -0.0000   +/-   1.0000        :N:M:T
+   38  PDF_nuisance_param_38                 -0.0000   +/-   1.0000        :N:M:T
+   39  PDF_nuisance_param_39                  0.0000   +/-   1.0000        :N:M:T
+   40  PDF_nuisance_param_40                  0.0000   +/-   1.0000        :N:M:T
+   41  PDF_nuisance_param_41                  0.0000   +/-   1.0000        :N:M:T
+   42  PDF_nuisance_param_42                 -0.0000   +/-   1.0000        :N:M:T

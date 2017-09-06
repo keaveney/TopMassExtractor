@@ -1,0 +1,19 @@
+from ROOT import *
+import numpy as np
+x = np.array([1.0,2.0,3.0,4.0,5.0])
+y = np.array([2.1,2.9,4.05,5.2,5.95])
+ex = np.array([0,0,0,0,0])
+ey = np.array([0.1,0.1,0.1,0.1,0.1])
+graph = TGraphErrors(5,x,y,ex,ey);
+#graph.SetPoint(0,1.0,2.0)
+#graph.SetPoint(0,1.0,2.0)
+#graph.SetPoint(0,1.0,2.0)
+#graph.SetPoint(0,1.0,2.0)
+graph.SetMarkerSize(2)
+graph.SetMarkerStyle(21)
+graph.Draw("AP")
+
+fpol1 = TF1("fpol1","pol1",1,5)
+graph.Fit("fpol1")
+fpol1.Draw("same")
+

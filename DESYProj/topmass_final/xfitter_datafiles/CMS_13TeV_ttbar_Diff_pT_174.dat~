@@ -1,0 +1,33 @@
+*
+* Top quark pair differential cross section as function of M(ttbar)
+*
+&Data
+   Name         = 'CMS 13TeV ttbar [pT(top)] cross section mt=174'
+   IndexDataset = 215
+   Reaction     = 'ApplGrid ttbar'
+   TheoryType   = 'expression'
+   TermName     = 'A1'
+   TermType     = 'applgrid'
+   TermSource   = 'datafiles/lhc/cms/test/grid-TTbar_MS_ptt_mt174.root'
+   TheorExpr    = '(A1/1000.)'
+   NData        = 6
+   NColumn      = 5
+   ColumnType   = 2*'Bin','Sigma',2*'Error'
+   ColumnName   = 'pTmin','pTmax','x-section','stat','uncor'
+   Percent      = 2*True
+&End
+&PlotDesc
+   PlotN = 1
+   PlotDefColumn   = 'pTmax'
+   PlotDefValue    = 0., 550.
+   PlotVarColumn   = 'pTmax'
+   PlotOptions(1)  = 'Experiment:CMS@ExtraLabel:top 13 TeV mt=174 GeV dilepton GeV@XTitle:pT_{top}@YTitle: d#sigma/dm_{tt}'
+&End
+* pTmin    pTmax      ds/dmt [pb]/ GeV    stat [%]  syst [%]      
+  0.0      65.0       3.42498     1.13311      7.9243
+  65.0     125.0      5.12114     0.979177     7.86025
+  125.0    200.0      2.80269     0.914268     6.92297
+  200.0    290.0      0.849737    1.23811      6.05947
+  290.0    400.0      0.189046    1.55142      6.32172
+  400.0    550.0      0.0334429   3.89697      7.99319
+

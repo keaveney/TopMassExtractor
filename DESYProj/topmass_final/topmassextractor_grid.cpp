@@ -1,0 +1,672 @@
+/* 
+This is the main script which extracts theory and data measurements from another folder, plots them and their ratio on the same graph, calculate the chi2 for each mass point and plots them, and finally fits the chi2 and extracts the top mass
+
+All results are saved in the folder "prefinal"
+
+This file reads the text files to : 
+  - Extract covariance matrix: cov_mtt.txt, cov_pT.txt 
+  - Extract theory values read by xfitter: fittedresults_mtt.txt fittedresults_pT.txt fittedresults_afterk_mtt.txt fittedresults_afterk_pT.txt, 
+and the root files to extract data measurements: data/DiffXS_HypTTBarMass_source.root data/DiffXS_HypToppT_source.root
+
+to compile: root -l -b -q topmassextractor_grid.cpp
+*/
+#include <TFile.h>
+#include "TH1D.h"
+#include "TH1F.h"
+#include <TMath.h>
+#include <cmath>
+#include <fstream>
+#include <string>
+#include <vector>
+using namespace std;
+/*
+This function was used to plot the chi2, but now it's used to return the array of chi2 for all masses 
+*/
+double *plotchi2(vector <double> binwidth, vector <double> pred,vector <double> pred_err, vector <double> xsec_data, vector <double> data_bin_err, int N, double mt[], bool k, string var){
+      static double chi2[6]; 
+     //read covariance matrix
+      ifstream cov;
+      if (var == "mtt")
+      cov.open("cov_mtt.txt");
+      else if (var == "pT")
+      cov.open("cov_pT.txt");
+      TMatrixD *covmat = new TMatrixD(N,N);
+      string line;
+      double matelem;
+      for (int i=0;i<N;i++){
+	getline(cov,line);
+        istringstream ss(line);
+	  ss>>covmat(i,0)>>covmat(i,1)>>covmat(i,2)>>covmat(i,3)>>covmat(i,4)>>covmat(i,5)>>covmat(i,6);
+      }
+      cov.close();
+   // prepare the theory x-secs to be passed to the chi2 calculator
+   for (int i=0;i<6;i++){
+      if (k && var == "mtt"||k && var == "pT")
+	cout<<"********************Theory Extracted for top mass "<<mt[i]<<" GeV after k**********************"<<endl;
+      else cout<<"********************Theory Extracted for top mass "<<mt[i]<<" GeV before k**********************"<<endl;
+      int start = i*N;
+      int end = i*N+N;
+      double total = 0;
+      vector <double>::const_iterator first = pred.begin()+start;
+      vector <double>::const_iterator last = pred.begin()+end;
+      vector <double> pred_vec(first,last);
+      vector <double>::const_iterator first = pred_err.begin()+start;
+      vector <double>::const_iterator last = pred_err.begin()+end;
+      vector <double> pred_err_vec(first,last);
+      for (int j =0;j<N;j++){
+	total+=pred_vec.at(j)*binwidth.at(j);
+  	cout<<"pred xsec bin "<<j+1<<" = "<<pred_vec.at(j)<<"+/-"<<pred_err_vec.at(j)<<" pb/GeV"<<endl;
+      }
+      cout<<"total xsec pred for mass "<<mt[i]<<" = "<<total<<endl;
+      //cout<<"chi2 cumulative = ";
+      //chi2[i] = calcChi2(xsec_data,pred_vec,data_bin_err,pred_err_vec,N);
+	chi2[i] = calcChi2_cov(xsec_data,pred_vec,covmat,pred_err_vec,N);
+      if (!k)
+      cout<<"chi2 before k= "<<chi2[i]<<endl;
+      else cout<<"chi2 after k= "<<chi2[i]<<endl;
+   }
+   return chi2;
+}
+/*
+This function draws the data & theory measurements and their ratio on the same plot, and saves them to a folder named "prefinal"
+*/
+void draw(string var, double xbins[],double xbin_centre[], vector <double> xsec_data, vector <double> data_bin_err, vector <double> pred,vector <double> pred_err_tot,vector <double> pred_err_pdf, bool k){
+   if (var=="mtt")
+      int N = 7;
+   else if (var=="pT")
+      int N = 6;
+   TCanvas *c = new TCanvas("c","data&theory NLO",300,100,700,500);
+   TPad *upper = new TPad("pad1","pad1",0,0.3,1,1.0);
+   upper->SetBottomMargin(0.01);
+   upper->Draw();
+   upper->cd();
+   grdat = new TGraphErrors(N);
+   TH1D hist[6];
+   for (int i =0;i<6;i++){
+      hist[i] = TH1D("h_mtt"+i,"mtt",N,xbins);}
+   for (int i = 0;i<N;i++){
+    grdat.SetPoint(i,xbin_centre[i],xsec_data.at(i));
+    grdat.SetPointError(i,0.0,data_bin_err.at(i));
+    for (int j=0;j<6;j++){
+     hist[j]->Fill(xbins[i],pred.at(j*N+i));
+     //cout<<"prediction at bin "<<xbins_mtt[i]<<" = "<<pred.at(j*7+i)<<endl;
+    }
+   }
+   if (!k && var =="mtt")
+   grdat.SetTitle("Data & Predictions NLO mtt");
+   else if (k && var =="mtt")
+   grdat.SetTitle("Data & Predictions after k mtt");
+   else if (!k && var =="pT")
+   grdat.SetTitle("Data & Predictions NLO pT");
+   else if (k && var =="pT")
+   grdat.SetTitle("Data & Predictions after k pT");
+   //gr->GetXaxis()->SetTitle("mtt [GeV]");
+   grdat.GetYaxis()->SetTitle("xsec [pb/GeV]");
+   grdat.Draw("AP*");
+   TLegend* legend = new TLegend (0.4, 0.4, 0.7, 0.9);
+   legend->AddEntry(grdat,"data","p");
+   for (int i = 0;i<6;i++){
+     hist[i].SetLineColor(2+i);
+     hist[i].Draw("same");
+   }
+   legend->AddEntry("h_mtt"+0,"mt_168","l");
+   legend->AddEntry("h_mtt"+1,"mt_170","l");
+   legend->AddEntry("h_mtt"+2,"mt_172","l");
+   legend->AddEntry("h_mtt"+3,"mt_173.3","l");
+   legend->AddEntry("h_mtt"+4,"mt_174","l");
+   legend->AddEntry("h_mtt"+5,"mt_176","l");
+   legend->Draw("same");
+   c->cd();
+   TPad *lower = new TPad("pad2","pad2",0, 0, 1, 0.3);
+   lower->SetTopMargin(0.01);
+   lower->SetBottomMargin(0);
+   lower->SetGridy();
+   lower->Draw();
+   lower->cd();
+   if (var=="mtt"){
+	int start = 21;
+	int end = 28;
+   }
+   else if (var=="pT"){
+	int start = 18;
+	int end = 24;
+   }
+   vector <double>::const_iterator first = pred_err_tot.begin()+start;
+   vector <double>::const_iterator last = pred_err_tot.begin()+end;
+   vector <double> pred_err_tot_vec(first,last);
+   vector <double>::const_iterator first = pred_err_pdf.begin()+start;
+   vector <double>::const_iterator last = pred_err_pdf.begin()+end;
+   vector <double> pred_err_pdf_vec(first,last);
+   vector <double>::const_iterator first = pred.begin()+start;
+   vector <double>::const_iterator last = pred.begin()+end;
+   vector <double> pred_vec(first,last);
+   TGraphErrors *thergr = new TGraphErrors(N+1);
+   TGraphErrors *thergr2 = new TGraphErrors(N+1);
+   for (int i=0;i<=N;i++){
+	thergr->SetPoint(i,xbins[i],1.0);
+	thergr2->SetPoint(i,xbins[i],1.0);
+	if (i!=N){
+        double pred_err_scale = pow(pow(pred_err_tot_vec.at(i),2)-pow(pred_err_pdf_vec.at(i),2),0.5);
+	thergr->SetPointError(i,0,pred_err_pdf_vec.at(i)/pred_vec.at(i)+pred_err_scale/pred_vec.at(i));
+	thergr2->SetPointError(i,0,pred_err_scale/pred_vec.at(i));
+	}
+	else{
+        double pred_err_scale = pow(pow(pred_err_tot_vec.at(i-1),2)-pow(pred_err_pdf_vec.at(i-1),2),0.5);
+	thergr->SetPointError(i,0,pred_err_pdf_vec.at(i-1)/pred_vec.at(i-1)+pred_err_scale/pred_vec.at(i-1));
+	thergr2->SetPointError(i,0,pred_err_scale/pred_vec.at(i-1));
+	}
+   }
+   
+   thergr->SetFillColor(4);
+   thergr2->SetFillColor(3);
+   thergr->SetFillStyle(3010);
+   thergr2->SetFillStyle(3010);
+
+   //data and pred ratio
+   double ratio[7];
+   double data_erry[7]; 
+   double data_errx[7]={0};
+   //double ratio_sep[7];
+   TGraphErrors grrat[6];
+
+   for (int i=0;i<6;i++){
+       for (int j=0;j<N;j++){
+       ratio[j] = xsec_data.at(j)/pred.at(i*N+j);
+       data_erry[j] = (xsec_data.at(j)+data_bin_err.at(j))/pred.at(i*N+j)-ratio[j];
+       //grrat[i] = new TGraphErrors(N,xbin_centre,ratio,data_errx,data_erry);
+       }
+       //plot data uncertainties
+       grrat[i] = new TGraphErrors(N);
+       for (int j=0;j<N;j++){
+	grrat[i]->SetPoint(j,xbin_centre[j],ratio[j]);
+        //grrat[i]->SetMarker
+        grrat[i]->SetPointError(j,0.0,data_erry[j]);
+       }
+   }
+   //cout<<"------------------------------------error 176 = "<<data_erry[N-1]<<"--------------------------------------------"<<endl;
+   //cout<<"with xsec_data = "<<xsec_data.at(6)<<", xsec_pred = "<<xsec_pred_all[6][1]<<", ratio = "<<ratio[6]<<endl;
+   grrat[0]->GetYaxis()->SetTitle("data/theory");
+   grrat[0]->GetYaxis()->CenterTitle(true);
+   if (var == "mtt")
+   grrat[0]->GetXaxis()->SetTitle("mtt [GeV]");
+   else if (var == "pT")
+   grrat[0]->GetXaxis()->SetTitle("pT [GeV]");
+   grrat[0]->GetYaxis()->SetLabelSize(0.05);
+   grrat[0]->GetXaxis()->SetLabelSize(0.05);
+   grrat[0]->GetXaxis()->SetTitleSize(0.05);
+   grrat[0]->GetYaxis()->SetTitleSize(0.05);
+   grrat[0]->SetMinimum(0.75);
+   grrat[0]->SetMaximum(1.2);
+   grrat[0]->SetMarkerColor(2);
+   grrat[0]->SetMarkerStyle(1);
+   grrat->SetTitle("");
+   grrat->SetLineColor(2);
+   grrat->Draw("AP");
+
+   for (int i=1;i<6;i++){
+      grrat[i].SetMarkerColor(2+i);
+      grrat[i].SetMarkerStyle(1);
+      grrat[i].SetLineColor(2+i);
+      grrat[i]->Draw("P");
+   }
+       //plot theory uncertainty band with 173.3GeV
+   thergr->Draw("3");
+   thergr2->Draw("3");
+   TLegend* legend2 = new TLegend (0.9,0.2, 1.0, 0.3);
+   legend2->AddEntry(thergr,"pdf error","f");
+   legend2->AddEntry(thergr2,"scaling error","f");
+   legend2->Draw("same");
+
+   if (k && var =="mtt")
+    c->SaveAs("prefinal/data_Theory_mtt_after_k.root");
+   else if (!k && var=="mtt")
+    c->SaveAs("prefinal/data_Theory_mtt_b4_k.root");
+   else if (k && var =="pT")
+    c->SaveAs("prefinal/data_Theory_pT_after_k.root");
+   else if (!k && var =="pT")
+    c->SaveAs("prefinal/data_Theory_pT_b4_k.root");
+}
+//The chi2 calculator without covariance matrix, uncertainties are simply added in quadrature
+double calcChi2(vector <double> data, vector <double> pred, vector <double> data_err,vector <double> therr, int dof)
+{
+  int N = data.size();
+  double chi2;
+  for (int i=0;i<N;i++)
+     chi2+= pow(data.at(i)-pred.at(i),2)/(pow(data_err.at(i),2)+pow(therr.at(i),2));
+     //cout<<chi2<<" ";}
+  //cout<<" "<<endl;
+  return chi2;
+}
+//The chi2 calculator using the covariance matrix
+double calcChi2_cov(vector <double> data, vector <double> pred, TMatrixD *err,vector <double> therr, int dof)
+{
+  int N = data.size();
+  double chi2;
+  TVectorD *mat = new TVectorD(N);
+  TVectorD *data_theo = new TVectorD(N);
+  TMatrixD *err_mat = new TMatrixD(N,N);
+  for (int i =0;i<N;i++){
+	data_theo(i) = (data.at(i)-pred.at(i));
+  }
+  for (int i =0;i<N;i++){
+     for (int j =0;j<N;j++){
+        if (i==j)
+	err_mat(i,j) = err(i,j)+pow(therr.at(i),2);
+        else  err_mat(i,j) = err(i,j); 
+	//err_mat(i,j) = err(i,j); 
+     } 
+  }
+  err_mat = err_mat->Invert();
+  cout<<"***"<<endl;  
+  for (int i=0;i<N;i++){
+     //cout<<"mat"<<i<<" running =";
+     for (int j =0;j<N;j++){
+	mat(i) += data_theo(j)*err_mat(j,i);
+        //cout<<data_theo(j)<<" * ("<<err(j,i)<<"+"<<pow(1/therr.at(j),2)<<") ="<<mat(i)<<",";
+     }
+     //cout<<"**"<<endl;
+  }
+  for (int i =0;i<N;i++){
+     chi2+=mat(i)*data_theo(i);
+     cout<<chi2<<",";
+  }
+  cout<<"***"<<endl;
+ // chi2 = data_theoR*err*data_theoC;
+  return chi2;
+}
+//*************************************main code begins*********************************************
+//*************************************main code begins*********************************************
+//*************************************main code begins*********************************************
+//*************************************main code begins*********************************************
+//*************************************main code begins*********************************************
+int topmassextractor_grid(){
+  TString vars_dat[2] = {"TTBarMass", "ToppT"};
+//************************************mtt first*******************************************
+//************************************mtt first*******************************************
+//************************************mtt first*******************************************
+//************************************mtt first*******************************************
+  TFile* dataF = TFile::Open("data/DiffXS_Hyp"+vars_dat[0]+"_source.root");
+  TH1D* hist_dat = (TH1D*)dataF->Get("mc");
+  TGraphAsymmErrors* gr_dat = (TGraphAsymmErrors*) dataF->Get("data");
+    cout<<"*****************************mtt begins*******************************"<<endl;
+    cout<<"*****************************mtt begins*******************************"<<endl;
+    cout<<"*****************************mtt begins*******************************"<<endl;
+    cout<<"*****************************mtt begins*******************************"<<endl;
+    cout<<"*****************************mtt begins*******************************"<<endl;
+    double data_bin_x=0, data_bin_y=0;
+    vector <double> data_bin_x_vec;
+    double total = 0.0;
+    vector <double> binwidth;
+    //double chi2[6]={0};
+    vector <double> xsec_data;
+    vector <double> data_bin_err;
+    cout<<"    "<<endl;
+    cout<<"    "<<endl;
+    cout<<"************Data Results************"<<endl;
+    for (int b=0;b<hist_dat->GetNbinsX(); b++)
+    {
+      binwidth.push_back(hist_dat->GetBinLowEdge(b + 2) - hist_dat->GetBinLowEdge( b + 1));
+      //binwidth = 1;
+      data_bin_err.push_back(gr_dat->GetErrorY(b));
+      //cout<<"bin error = "<<data_bin_error<<endl;
+      gr_dat->GetPoint(b, data_bin_x,data_bin_y);
+      data_bin_x_vec.push_back(data_bin_x);
+      xsec_data.push_back(data_bin_y);
+      total += xsec_data.back()*binwidth.back();
+      cout<<"bin "<<data_bin_x<<"  x-sec = "<<xsec_data.back()<<" pb/GeV"<<endl;
+      cout<<"bin error = "<<data_bin_err.back()<<" pb/GeV"<<endl;
+    }
+    cout<<"total x-sec data: "<<total<<" pb"<<endl;
+
+//extract prediction from grid
+   ifstream file;
+   string line;
+   double bin_low, bin_high, xsec_theory, therr;
+   vector <double> pred, pred_err;
+   file.open("fittedresults_mtt.txt");
+   total=0;
+   while (!file.eof()){
+      while (getline(file,line)){
+         istringstream ss(line);
+         ss>>bin_low>>bin_high>>" ">>" ">>" ">>" ">>xsec_theory>>" ">>therr;
+	 pred.push_back(xsec_theory);
+         pred_err.push_back(therr);
+         //cout<<bin_low<<" "<<bin_high<<" "<<xsec_theory<<"+/-"<<therr<<endl;
+      }
+   }
+   file.close();
+   //add scaling errors NLO
+   vector <double> pred_err_NLO;
+   double pred_err_NLO_upper[] = {0.27829,0.31764,0.149496,0.048231,0.012374,0.002107};
+   double pred_err_NLO_lower[] = {0.25572,0.33612,0.175529,0.060063,0.016181,0.002918};
+   for (int i =0;i<6;i++){
+      for (int j=0;j<6;j++){
+	if (xsec_data.at(j)<pred.at(i*7+j))
+	  pred_err_NLO.push_back(pow(pow(pred_err_NLO_lower[j],2)+pow(pred_err.at(i*7+j),2),0.5));
+        else if (xsec_data.at(j)>pred.at(i*7+j))
+	  pred_err_NLO.push_back(pow(pow(pred_err_NLO_upper[j],2)+pow(pred_err.at(i*7+j),2),0.5));
+      }
+      pred_err_NLO.push_back(pred_err.at(i*7+6));
+   }
+   double mt[6] = {168,170,172,173.3,174,176};
+   //calculate chi2 NLO
+   double *chi2;
+   chi2 = plotchi2(binwidth, pred,pred_err_NLO, xsec_data,data_bin_err,7,mt,false,"mtt");
+   double chi2_mtt[6];
+   for (int i = 0;i<6;i++)
+     chi2_mtt[i] = *(chi2+i);
+
+//now draw data &theory before k 
+   const double xbins_mtt[] = {300,380,470,620,820,1100,1550,2500};
+   double xbin_centre[] = {340,425,545,720,960,1325,2025};
+   draw("mtt",xbins_mtt,xbin_centre,xsec_data,data_bin_err,pred,pred_err_NLO,pred_err,false);
+
+//Now the k factor
+//extract NLO&NNLO xsecs mass 173.3 GeV
+   int start = 21;
+   int end = 27;
+   vector <double>::const_iterator first = pred.begin()+start;
+   vector <double>::const_iterator last = pred.begin()+end;
+   vector <double> pred_vec(first,last);
+   double xsec_NNLO[6] = {1.21034, 3.34378, 1.7443, 0.570761, 0.1460965, 0.024839};//first bin are combined from exp 1 and 2
+   double xsec_NLO[6]={1.0091,2.8992,1.4992, 0.47928, 0.11956,0.021225};
+   double kfactor[6];
+   for (int i =0;i<6;i++){
+	//kfactor[i] = xsec_NNLO[i]/pred_vec.at(i);
+	kfactor[i] = xsec_NNLO[i]/xsec_NLO[i];
+        cout<<"NNLO xsec = "<<xsec_NNLO[i]<<" NLO xsec = "<<xsec_NLO[i]<<" k = "<<kfactor[i]<<endl;
+   }
+   vector <double> pred_with_k;
+   vector <double> pred_err_NNLO;
+   double pred_err_NNLO_upper[] = {0.074555,0.033852, 0.028574,0.013555,0.00473,0.00104};
+   double pred_err_NNLO_lower[] = {0.13038,0.12790,0.0739,0.0283143, 0.008491,0.001634};
+
+//now extract pdf errors after k factor's applied
+   vector <double> pdf_err;
+   file.open("fittedresults_afterk_mtt.txt");
+   while (!file.eof()){
+      while (getline(file,line)){
+         istringstream ss(line);
+         ss>>bin_low>>bin_high>>" ">>" ">>" ">>" ">>" ">>xsec_theory>>therr;
+         pdf_err.push_back(therr);
+         //cout<<bin_low<<" "<<bin_high<<" "<<xsec_theory<<"+/-"<<therr<<endl;
+      }
+   }
+double kup[6];
+double kdown[6];
+cout<<"+++++++++++++++++++++++++++++new kfactor mtt with scale uncertainties incorporated for xfitter: ";
+for (int i =0;i<6;i++){
+  kup[i] = kfactor[i]*(1+pred_err_NNLO_upper[i]/xsec_NNLO[i]);
+  cout<<"kup for bin"<<i<<" = "<<kup[i]<<endl;
+  kdown[i] = kfactor[i]*(1-pred_err_NNLO_lower[i]/xsec_NNLO[i]);
+  cout<<"kdown for bin"<<i<<" = "<<kdown[i]<<endl;
+}
+
+//Now take kfactor, and calculate chi2 again. 
+  for (int i=0;i<6;i++){
+      //apply k
+      for (int j=0;j<6;j++){
+	pred_with_k.push_back(pred.at(i*7+j)*kfactor[j]);
+	if (xsec_data.at(j)<pred_with_k.back())
+   	pred_err_NNLO.push_back(pow(pow(pred_err_NNLO_lower[j],2)+pow(pdf_err.at(i*7+j),2),0.5));
+	else if (xsec_data.at(j)>pred_with_k.back())
+	pred_err_NNLO.push_back(pow(pow(pred_err_NNLO_upper[j],2)+pow(pdf_err.at(i*7+j),2),0.5));
+      }
+      pred_with_k.push_back(pred.at(i*7+6));
+      pred_err_NNLO.push_back(pred_err.at(i*7+6));
+  }
+cout<<"+++++++++++++++++++++++++++++++++++++++++++ "<<endl;
+
+//calculate chi2 after k, draw data&theory after k as well.
+  chi2 = plotchi2(binwidth, pred_with_k,pred_err_NNLO,xsec_data,data_bin_err,7,mt,true,"mtt");
+   double chi2_mtt_afterk[6];
+   for (int i = 0;i<6;i++)
+     chi2_mtt_afterk[i] = *(chi2+i);
+  draw("mtt",xbins_mtt,xbin_centre,xsec_data,data_bin_err,pred_with_k,pred_err_NNLO, pdf_err,true);
+  dataF->Close();
+  binwidth.clear();
+  xsec_data.clear();
+  data_bin_err.clear();
+  data_bin_x_vec.clear();
+  pred_err_NLO.clear();
+  pred.clear();
+  pred_err.clear();
+  pred_err_NNLO.clear();
+  pred_with_k.clear();
+  pdf_err.clear();
+  pred_vec.clear();
+    cout<<"*****************************pT begins*******************************"<<endl;
+    cout<<"*****************************pT begins*******************************"<<endl;
+    cout<<"*****************************pT begins*******************************"<<endl;
+    cout<<"*****************************pT begins*******************************"<<endl;
+    cout<<"*****************************pT begins*******************************"<<endl;
+//***************************************Repeat everything for pT******************************************
+//***************************************Repeat everything for pT******************************************
+//***************************************Repeat everything for pT******************************************
+//***************************************Repeat everything for pT******************************************
+  dataF = TFile::Open("data/DiffXS_Hyp"+vars_dat[1]+"_source.root");
+  hist_dat = (TH1D*)dataF->Get("mc");
+  gr_dat = (TGraphAsymmErrors*) dataF->Get("data");
+
+    data_bin_x=0, data_bin_y=0;
+    total = 0.0;
+    cout<<" "<<endl;
+    cout<<" "<<endl;
+    cout<<"************Data Results************"<<endl;
+    for (int b=0;b<hist_dat->GetNbinsX(); b++)
+    {
+      binwidth.push_back(hist_dat->GetBinLowEdge(b + 2) - hist_dat->GetBinLowEdge( b + 1));
+      data_bin_err.push_back(gr_dat->GetErrorY(b));
+      gr_dat->GetPoint(b, data_bin_x,data_bin_y);
+      data_bin_x_vec.push_back(data_bin_x);
+      xsec_data.push_back(data_bin_y);
+      total += xsec_data.back()*binwidth.back();
+      cout<<"bin "<<data_bin_x<<"  x-sec = "<<xsec_data.back()<<" pb/GeV"<<endl;
+      cout<<"bin error = "<<data_bin_err.back()<<" pb/GeV"<<endl;
+    }
+    cout<<"total x-sec data: "<<total<<" pb"<<endl;
+
+//extract prediction from grid
+   ifstream file;
+   string line;
+   double bin_low, bin_high, xsec_theory, therr;
+   vector <double> pred, pred_err;
+   file.open("fittedresults_pT.txt");
+   total=0;
+   while (!file.eof()){
+      while (getline(file,line)){
+         istringstream ss(line);
+         ss>>bin_low>>bin_high>>" ">>" ">>" ">>" ">>xsec_theory>>" ">>therr;
+	 pred.push_back(xsec_theory);
+         pred_err.push_back(therr);
+         //cout<<bin_low<<" "<<bin_high<<" "<<xsec_theory<<"+/-"<<therr<<endl;
+      }
+   }
+   file.close();
+   //add scaling errors
+   vector <double> pred_err_NLO;
+   double pred_err_NLO_upper[] = {0.32305,0.45238,0.2497,0.08738,0.023074,0.0047307};
+   double pred_err_NLO_lower[] = {0.32935,0.50348,0.28864,0.099257,0.025398,0.005123};
+   for (int i =0;i<6;i++){
+      for (int j=0;j<6;j++){
+	if (xsec_data.at(j)<pred.at(i*6+j))
+	  pred_err_NLO.push_back(pow(pow(pred_err_NLO_lower[j],2)+pow(pred_err.at(i*6+j),2),0.5));
+        else if (xsec_data.at(j)>pred.at(i*6+j))
+	  pred_err_NLO.push_back(pow(pow(pred_err_NLO_upper[j],2)+pow(pred_err.at(i*6+j),2),0.5));
+      }
+   }
+   //calculate and plot chi2
+   //plotchi2(binwidth, pred,pred_err_NLO, xsec_data,data_bin_err,6,mt,false,"pT");
+   //double *chi2_pT;
+     chi2 = plotchi2(binwidth, pred,pred_err_NLO,xsec_data,data_bin_err,6,mt,false,"pT");
+   double chi2_pT[6];
+   for (int i = 0;i<6;i++)
+     chi2_pT[i] = *(chi2+i);
+   //plot chi2 before k (NLO)
+   TCanvas *c1 = new TCanvas("c1","chi2_b4k",300,100,700,500);
+   gr = new TGraph(6);
+   gr_pT = new TGraph(6);
+   for (int i =0;i<6;i++){
+   gr->SetPoint(i, mt[i], chi2_mtt[i]);}
+   f = new TF1("f","pol2",mt[0],mt[5]);
+   f->SetLineColor(2);
+   f->SetLineWidth(0.5);
+   gr->Fit("f");
+   gr->SetTitle("chi2 NLO");
+   gr->GetXaxis()->SetTitle("mt [GeV]");
+   gr->GetYaxis()->SetTitle("chi2");
+   gr->SetMarkerColor(2);
+   gr->Draw("AP*");
+
+//get best fit values
+   double xerr_xfit1,xerr_xfit2,minX_xfit,minY;
+   minX_xfit = f->GetMinimumX();
+   minY = f->GetMinimum();
+   xerr_xfit1 = f->GetX(minY+1,0,minX_xfit);
+   xerr_xfit2 = f->GetX(minY+1,minX_xfit,200);
+   cout<<"*********************best fit top mass = "<<minX_xfit<<" -/+ "<<minX_xfit-xerr_xfit1<<" & "<<xerr_xfit2-minX_xfit<<"*********************"<<endl;
+
+   for (int i =0;i<6;i++){
+   gr_pT->SetPoint(i, mt[i], chi2_pT[i]);}
+   f3 = new TF1("f3","pol2",mt[0],mt[5]);
+   f3->SetLineColor(4);
+   f3->SetLineWidth(0.5);
+   gr_pT->Fit("f3");
+   gr_pT->SetMarkerColor(4);
+   gr_pT->SetMarkerStyle(34);
+   f->Draw("same");
+   gr_pT->Draw("P");
+
+   f3->Draw("same");
+//get best fit values
+   minX_xfit = f3->GetMinimumX();
+   minY = f3->GetMinimum();
+   xerr_xfit1 = f3->GetX(minY+1,0,minX_xfit);
+   xerr_xfit2 = f3->GetX(minY+1,minX_xfit,200);
+   cout<<"*********************best fit top mass = "<<minX_xfit<<" -/+ "<<minX_xfit-xerr_xfit1<<" & "<<xerr_xfit2-minX_xfit<<"*********************"<<endl;
+
+ TLegend* legend = new TLegend (0.1, 0.8, 0.25, 0.9);
+ legend->AddEntry(gr,"mtt_b4k","p");
+ legend->AddEntry(gr_pT,"pT_b4k","p");
+ legend->AddEntry(f,"mtt_b4k_fit","l");
+ legend->AddEntry(f3,"pT_b4k_fit","l");
+ legend->Draw("same");
+   c1->SaveAs("prefinal/chi2_b4k.root");
+
+//now draw data &theory before k for pT 
+   const double xbins_mtt[] = {0,65,125,200,290,400,550};
+   double xbin_centre[] = {32.5,95,162.5,245,345,475};
+   draw("pT",xbins_mtt,xbin_centre,xsec_data,data_bin_err,pred,pred_err_NLO,pred_err,false);
+
+//Now the k factor
+//extract mass 173.3 GeV
+   start = 18;
+   end = 24;
+   vector <double>::const_iterator first = pred.begin()+start;
+   vector <double>::const_iterator last = pred.begin()+end;
+   vector <double> pred_vec(first,last);
+   double xsec_NNLO[6] = {3.14856,5.0008,2.808539,0.909544,0.21745,0.0413857};
+   double xsec_NLO[6]={2.6449,4.2733,2.4278,0.77679,0.18415,0.035872};
+   for (int i =0;i<6;i++){
+	//kfactor[i] = xsec_NNLO[i]/pred_vec.at(i);
+	kfactor[i] = xsec_NNLO[i]/xsec_NLO[i];
+        cout<<"NNLO xsec = "<<xsec_NNLO[i]<<" NLO xsec = "<<xsec_NLO[i]<<" k = "<<kfactor[i]<<endl;
+   }
+ 
+   double pred_err_NNLO_upper[] = {0.06388,0.07237,0.038718,0.013083,0.0030936,0.00037297};
+   double pred_err_NNLO_lower[] = {0.1457523,0.20779,0.11798,0.040986,0.010412,0.0019312};
+
+//now extract pdf errors after k factor's applied
+   file.open("fittedresults_afterk_pT.txt");
+   while (!file.eof()){
+      while (getline(file,line)){
+         istringstream ss(line);
+         ss>>bin_low>>bin_high>>" ">>" ">>" ">>" ">>" ">>xsec_theory>>therr;
+         pdf_err.push_back(therr);
+         //cout<<bin_low<<" "<<bin_high<<" "<<xsec_theory<<"+/-"<<therr<<endl;
+      }
+   }
+cout<<"++++++++++++++++++++++new kfactor pT with scale uncertainties incorporated for xfitter: ";
+for (int i =0;i<6;i++){
+  kup[i] = kfactor[i]*(1+pred_err_NNLO_upper[i]/xsec_NNLO[i]);
+  cout<<"kup for bin"<<i<<" = "<<kup[i]<<endl;
+  kdown[i] = kfactor[i]*(1-pred_err_NNLO_lower[i]/xsec_NNLO[i]);
+  cout<<"kdown for bin"<<i<<" = "<<kdown[i]<<endl;
+}
+//Now take kfactor, and calculate chi2 again. 
+  for (int i=0;i<6;i++){
+      //apply k
+      for (int j=0;j<6;j++){
+	pred_with_k.push_back(pred.at(i*6+j)*kfactor[j]);
+        //cout<<"checkpoint"<<j<<" pred_with_k 1 =  "<<pred_with_k.back()<<"data = "<<xsec_data.at(j)<<endl;
+	if (xsec_data.at(j)<pred_with_k.back())
+   	pred_err_NNLO.push_back(pow(pow(pred_err_NNLO_lower[j],2)+pow(pdf_err.at(i*6+j),2),0.5));
+	else if (xsec_data.at(j)>pred_with_k.back())
+	pred_err_NNLO.push_back(pow(pow(pred_err_NNLO_upper[j],2)+pow(pdf_err.at(i*6+j),2),0.5));
+      }
+  }
+cout<<"+++++++++++++++++++++++++++++"<<endl;
+
+//plot chi2 after k, draw data&theory after k as well.
+  chi2=plotchi2(binwidth, pred_with_k,pred_err_NNLO,xsec_data,data_bin_err,6,mt,true,"pT");
+   double chi2_pT_afterk[6];
+   for (int i = 0;i<6;i++)
+     chi2_pT_afterk[i] = *(chi2+i);
+  draw("pT",xbins_mtt,xbin_centre,xsec_data,data_bin_err,pred_with_k,pred_err_NNLO,pdf_err,true);
+   TCanvas *c2 = new TCanvas("c2","chi2_afterk",300,100,700,500);
+   gr2 = new TGraph(6);
+   for (int i =0;i<6;i++){
+   gr2->SetPoint(i, mt[i], chi2_mtt_afterk[i]);}
+   f2 = new TF1("f2","pol2",mt[0],mt[5]);
+   f2->SetLineColor(2);
+   f2->SetLineWidth(0.5);
+   gr2->Fit("f2");
+   gr2->SetTitle("chi2 after k");
+   gr2->GetXaxis()->SetTitle("mt [GeV]");
+   gr2->GetYaxis()->SetTitle("chi2");
+   gr2->SetMarkerColor(2);
+   gr2->SetMarkerStyle(3);
+   gr2->Draw("AP");
+   f2->Draw("same");
+//get best fit values
+   minX_xfit = f2->GetMinimumX();
+   minY = f2->GetMinimum();
+   xerr_xfit1 = f2->GetX(minY+1,0,minX_xfit);
+   xerr_xfit2 = f2->GetX(minY+1,minX_xfit,200);
+   cout<<"*********************best fit top mass mtt = "<<minX_xfit<<" -/+ "<<minX_xfit-xerr_xfit1<<" & "<<xerr_xfit2-minX_xfit<<"*********************"<<endl;
+   //cout<<"uncertainty left = "<<minX_xfit-xerr_xfit1<<", uncertainty right = "<<xerr_xfit2-minX_xfit<<endl;
+   //TPaveText *pt1 = new TPaveText(0.5,0.5,0.8,0.7,"NDC");
+   //pt1->AddText("top mass by xfitter = 172.717+/-1.500 [GeV]");
+  // pt1->Draw("same");
+   gr2_pT = new TGraph(6);
+   for (int i =0;i<6;i++){
+   gr2_pT->SetPoint(i, mt[i], chi2_pT_afterk[i]);}
+   f4 = new TF1("f4","pol2",mt[0],mt[5]);
+   f4->SetLineColor(4);
+   f4->SetLineWidth(0.5);
+   gr2_pT->Fit("f4");
+   gr2_pT->SetMarkerColor(4);
+   gr2_pT->SetMarkerStyle(34);
+   gr2_pT->Draw("P");
+   f4->Draw("same");
+TPaveText *pt1 = new TPaveText(0.7,0.85,0.9,0.9,"NDC");
+ pt1->AddText("top mass from mtt = 171.450+/-0.731 [GeV]");
+ pt1->AddText("top mass from pT = 172.492+/-0.889 [GeV]");
+ pt1->Draw("same");
+ TLegend* legend2 = new TLegend (0.1, 0.8, 0.25, 0.9);
+ legend2->AddEntry(gr2,"mtt_afterk","p");
+ legend2->AddEntry(gr2_pT,"pT_afterk","p");
+ legend2->AddEntry(f2,"mtt_afterk_fit","l");
+ legend2->AddEntry(f4,"pT_afterk_fit","l");
+ legend2->Draw("same");
+   c2->SaveAs("test2.root");
+//get best fit values
+   minX_xfit = f4->GetMinimumX();
+   minY = f4->GetMinimum();
+   xerr_xfit1 = f4->GetX(minY+1,0,minX_xfit);
+   xerr_xfit2 = f4->GetX(minY+1,minX_xfit,200);
+   cout<<"*********************best fit top mass pT = "<<minX_xfit<<" -/+ "<<minX_xfit-xerr_xfit1<<" & "<<xerr_xfit2-minX_xfit<<"*********************"<<endl;
+
+  dataF->Close();
+  return 0;
+}

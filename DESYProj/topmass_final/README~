@@ -1,0 +1,28 @@
+This directory contains three scripts for top mass extraction: 
+
+1.extractCov.cpp
+The script is used to extract the statistical correlation coefficient from Mykola, multiplied by data uncertainties to obtain the covariance matrix and print them to "cov_mtt.txt" and "cov_pT.txt"
+
+2.topmassextractor_grid.cpp
+inputs:
+The main script for the manual version of top mass extraction. This script reads the NLO predictions and pdf uncertainties from xfitter (filenames: "fittedresults_xxx.txt"). For convenience, the titles/column labels of the files are removed. An example of the complete file is included (but not used in this script) "fittedresults_with_titles.txt". 
+
+kfactor calculation:
+One should use the NLO theory predictions at 173.3 GeV from xfitter to calculate kfactor. 
+The NNLO predictions at 173.3GeV in "topmassextractor_grid" for kfactor calculation are taken from Mitov, all data can be found in the ANC files in arXiv 1606.03350v2. Using "LHC13-specific_experimental_binning/..." files. 
+
+outputs:
+The chi2 output results and data+theory ratio plots are saved to a folder named "prefinal".  
+
+3.xfitter_diff.cpp
+The script takes the xfitter results under the folder "xfitter_results" and extract top mass. Note that the results are hard-coded into the script, but all results are taken from the result files in the folder specified above. I'm using only the NLO pdf set for both NLO predictions and estimated NNLOs (kfactors applied to NLO). However, one should use NNLO pdfs for the latter. It does not matter for manual extraction because it does not alter pdf parameters like xfitter does. Note that the kfactors fed into xfitter are from the manual extraction. All pdfs can be found at https://lhapdf.hepforge.org/pdfsets.html 
+
+The data files and theory predictions xfitter reads from are in the folder "xfitter_datafiles". "xfitter_steering.txt"  is an example input control file. For more information about running xfitter, please read the "README" after downloading the xfitter package from https://www.xfitter.org/xFitter/xFitter/DownloadPage
+
+All cpp files are set up to be compiled by ROOT with the command: 
+root -l -b -q FILENAME
+
+You need to create a directory named "prefinal" as all the results (chi2 curves and data&theory plots will be saved in that directory)
+
+If you have questions or concerns, please contact me at gevy.cao@queensu.ca
+ 
