@@ -1,0 +1,126 @@
+**************************************************
+*** NLO prediction mt = 168
+300<M(ttbar)<380, x_sec_pred = 165.454
+380<M(ttbar)<470, x_sec_pred = 321.593
+470<M(ttbar)<620, x_sec_pred = 156.314
+620<M(ttbar)<820, x_sec_pred = 48.9048
+820<M(ttbar)<1100, x_sec_pred = 12.1502
+1100<M(ttbar)<1550, x_sec_pred = 2.15428
+1550<M(ttbar)<2500, x_sec_pred = 0.186908
+*** Total x-section_pred = 79965.6
+Integrated x-sec_pred = 79956.8
+**************************************************
+*** NLO prediction mt = 170
+300<M(ttbar)<380, x_sec_pred = 137.873
+380<M(ttbar)<470, x_sec_pred = 307.26
+470<M(ttbar)<620, x_sec_pred = 152.451
+620<M(ttbar)<820, x_sec_pred = 48.1466
+820<M(ttbar)<1100, x_sec_pred = 11.9594
+1100<M(ttbar)<1550, x_sec_pred = 2.13086
+1550<M(ttbar)<2500, x_sec_pred = 0.185331
+*** Total x-section_pred = 75672.6
+Integrated x-sec_pred = 75663.9
+**************************************************
+*** NLO prediction mt = 172
+300<M(ttbar)<380, x_sec_pred = 112.947
+380<M(ttbar)<470, x_sec_pred = 293.242
+470<M(ttbar)<620, x_sec_pred = 148.814
+620<M(ttbar)<820, x_sec_pred = 47.333
+820<M(ttbar)<1100, x_sec_pred = 11.7911
+1100<M(ttbar)<1550, x_sec_pred = 2.10505
+1550<M(ttbar)<2500, x_sec_pred = 0.182285
+*** Total x-section_pred = 71646.7
+Integrated x-sec_pred = 71638.2
+**************************************************
+*** NLO prediction mt = 173.3
+300<M(ttbar)<380, x_sec_pred = 99.043
+380<M(ttbar)<470, x_sec_pred = 283.769
+470<M(ttbar)<620, x_sec_pred = 146.365
+620<M(ttbar)<820, x_sec_pred = 46.7736
+820<M(ttbar)<1100, x_sec_pred = 11.6968
+1100<M(ttbar)<1550, x_sec_pred = 2.0891
+1550<M(ttbar)<2500, x_sec_pred = 0.179952
+*** Total x-section_pred = 69167.4
+Integrated x-sec_pred = 69158.3
+**************************************************
+*** NLO prediction mt = 174
+300<M(ttbar)<380, x_sec_pred = 90.839
+380<M(ttbar)<470, x_sec_pred = 279.528
+470<M(ttbar)<620, x_sec_pred = 145.12
+620<M(ttbar)<820, x_sec_pred = 46.554
+820<M(ttbar)<1100, x_sec_pred = 11.625
+1100<M(ttbar)<1550, x_sec_pred = 2.08122
+1550<M(ttbar)<2500, x_sec_pred = 0.178667
+*** Total x-section_pred = 67873.2
+Integrated x-sec_pred = 67864.8
+**************************************************
+*** NLO prediction mt = 176
+300<M(ttbar)<380, x_sec_pred = 71.2461
+380<M(ttbar)<470, x_sec_pred = 266.064
+470<M(ttbar)<620, x_sec_pred = 141.459
+620<M(ttbar)<820, x_sec_pred = 45.7114
+820<M(ttbar)<1100, x_sec_pred = 11.4971
+1100<M(ttbar)<1550, x_sec_pred = 2.05829
+1550<M(ttbar)<2500, x_sec_pred = 0.18029
+*** Total x-section_pred = 64331.6
+Integrated x-sec_pred = 64323.2
+**************************************************
+*** NLO prediction mt = 168
+0<pT(t)<65, x_sec_pred = 312.881
+65<pT(t)<125, x_sec_pred = 491.799
+125<pT(t)<200, x_sec_pred = 266.068
+200<pT(t)<290, x_sec_pred = 82.1309
+290<pT(t)<400, x_sec_pred = 19.0871
+400<pT(t)<550, x_sec_pred = 3.63403
+*** Total x-section_pred = 79965.6
+Integrated x-sec_pred = 79836.8
+**************************************************
+*** NLO prediction mt = 170
+0<pT(t)<65, x_sec_pred = 290.261
+65<pT(t)<125, x_sec_pred = 464.303
+125<pT(t)<200, x_sec_pred = 253.606
+200<pT(t)<290, x_sec_pred = 79.9852
+290<pT(t)<400, x_sec_pred = 18.7784
+400<pT(t)<550, x_sec_pred = 3.56363
+*** Total x-section_pred = 75672.6
+Integrated x-sec_pred = 75544.5
+**************************************************
+*** NLO prediction mt = 172
+0<pT(t)<65, x_sec_pred = 271.001
+65<pT(t)<125, x_sec_pred = 435.023
+125<pT(t)<200, x_sec_pred = 243.651
+200<pT(t)<290, x_sec_pred = 77.3923
+290<pT(t)<400, x_sec_pred = 18.5017
+400<pT(t)<550, x_sec_pred = 3.52654
+*** Total x-section_pred = 71646.7
+Integrated x-sec_pred = 71519.8
+**************************************************
+*** NLO prediction mt = 173.3
+0<pT(t)<65, x_sec_pred = 258.718
+65<pT(t)<125, x_sec_pred = 417.782
+125<pT(t)<200, x_sec_pred = 237.299
+200<pT(t)<290, x_sec_pred = 76.0249
+290<pT(t)<400, x_sec_pred = 18.0703
+400<pT(t)<550, x_sec_pred = 3.53277
+*** Total x-section_pred = 69167.4
+Integrated x-sec_pred = 69040.9
+**************************************************
+*** NLO prediction mt = 174
+0<pT(t)<65, x_sec_pred = 252.958
+65<pT(t)<125, x_sec_pred = 408.582
+125<pT(t)<200, x_sec_pred = 232.545
+200<pT(t)<290, x_sec_pred = 76.0357
+290<pT(t)<400, x_sec_pred = 18.0381
+400<pT(t)<550, x_sec_pred = 3.4767
+*** Total x-section_pred = 67873.2
+Integrated x-sec_pred = 67747
+**************************************************
+*** NLO prediction mt = 176
+0<pT(t)<65, x_sec_pred = 235.517
+65<pT(t)<125, x_sec_pred = 385.336
+125<pT(t)<200, x_sec_pred = 222.86
+200<pT(t)<290, x_sec_pred = 73.1504
+290<pT(t)<400, x_sec_pred = 17.8465
+400<pT(t)<550, x_sec_pred = 3.44438
+*** Total x-section_pred = 64331.6
+Integrated x-sec_pred = 64206.6

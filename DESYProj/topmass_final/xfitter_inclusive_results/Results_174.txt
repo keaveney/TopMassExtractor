@@ -1,0 +1,12 @@
+After minimisation       0.60     1     0.599
+
+  Partial chi2s 
+Dataset    1      0.31( -0.07)     1  CMS inclusive ttbar 13 TeV dilepton             
+
+ Correlated Chi2   0.35577510792396705     
+ Log penalty Chi2   -6.5580159957423195E-002
+ Systematic shifts            2
+  
+                                Name          Shift   +/-    Error          Type
+    1  lumi_cms_till                         -0.4986   +/-   0.7910        :N:M:D
+    2  PDF_nuisance_param_01                 -0.3274   +/-   0.9157        :N:M:T
