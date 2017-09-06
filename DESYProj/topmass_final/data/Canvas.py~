@@ -1,0 +1,28 @@
+from ROOT import *
+c1 = TCanvas("canvas","canvas",800,600)
+hist1 = TH1F("h1","hist gauss",50,-3,3)
+hist2 = TH1F("h2","hist pol2",50,-3,3)
+hist1.FillRandom("gaus",1000)
+hist2.FillRandom("pol2",500)
+
+hist1.Draw()
+hist2.Draw("same")
+
+hist1.SetLineColor(kRed)
+hist2.SetLineColor(kBlue)
+
+hist1b = hist1.Clone()
+hist1b = 1/hist1b.Integral()*hist1b
+hist2b = hist2.Clone()
+hist2b = 1/hist2b.Integral()*hist2b
+c2 = TCanvas("canvas2","canvas2",800,600)
+
+hist1b.Draw()
+hist2b.Draw("same")
+
+legend = TLegend(0.16,0.63,0.45,0.91)
+legend.AddEntry(hist1b,"Gaussian","s")
+legend.AddEntry(hist2b,"Poly 2","s")
+legend.Draw()
+
+
